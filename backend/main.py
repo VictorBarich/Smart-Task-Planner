@@ -1,4 +1,5 @@
-from tasks.py import Task, Tasks
+from tasks import Task, Tasks
+from ai import ai_reordering
 
 def main():
     task_manager = Tasks()
@@ -15,3 +16,18 @@ def main():
     task_manager.remove_task(task1)
     print("After removing Task 1:")
     task_manager.list_tasks()
+
+
+    print("Testing AI reordering")
+    task_manager.add_task(Task("Task 66", "This task is not very important."))
+    task_manager.add_task(Task("Task 67", "This task is critical."))
+    task_manager.list_tasks()
+
+    ai_reordering(task_manager)
+
+    print("After AI reordering:")
+    task_manager.list_tasks()
+
+
+if __name__ == "__main__":
+    main()
