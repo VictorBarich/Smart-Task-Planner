@@ -10,7 +10,9 @@ API_KEY = os.getenv("API_KEY")
 def ai_reordering(tasks_object):
     tasks = tasks_object.tasks
 
-    prompt = """You are a task prioritizer. Rearrange the given list of tasks in descending priority (most important task first),
+    # Generate prompt with description and tasks 
+    prompt = """You are a task prioritizer and prioritize tasks based their names and descriptions. 
+                Rearrange the given list of tasks in descending priority (most important task first),
                 depending on the task name and description. Here are the tasks:\n"""
     for i in range(len(tasks)):
         prompt += f"{i}. Task Name: {tasks[i].name}. Task Description: {tasks[i].description}\n"
@@ -20,13 +22,14 @@ def ai_reordering(tasks_object):
 
 
 
-
+    # Call the API
     genai.configure(api_key=API_KEY)
     model = genai.GenerativeModel("gemini-2.5-flash")
     raw_output = model.generate_content(prompt).text
 
 
 
+    # Reformat the output and set it to the new tasks list
     # print(f"raw output: {raw_output}")
     list_ordered_names = [line.split(". ", 1)[1].strip() for line in raw_output.split("\n") if ". " in line]
     name_task_mapping = {task.name: task for task in tasks}
