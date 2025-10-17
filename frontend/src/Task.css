@@ -1,0 +1,16 @@
+.Task {
+    background-color: gray;
+    margin: 8px;
+    border: 2px solid lightgray;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+}
+.Task h2 {
+    display: inline;
+}
+
+.Task input[type=checkbox] {
+    display: inline;
+    scale: 200%;
+}
