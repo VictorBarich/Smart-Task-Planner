@@ -1,10 +1,10 @@
 import "./Task.css";
 
-function Task({index, name, completed}) {
+function Task({index, name, completed, checkboxActionFunction}) {
 
   return (
     <div className="Task">
-        <h2>{index}. &nbsp; {name}</h2> &nbsp; <input type="checkbox" defaultChecked={completed}></input>
+        <h2>{index}.</h2> <h2>{name}</h2> <input type="checkbox" defaultChecked={completed} onChange={checkboxActionFunction}></input>
     </div>
   );
 }
