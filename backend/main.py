@@ -1,5 +1,4 @@
-from tasks.py import Task, Tasks
-
+from tasks import Task, Tasks
 def main():
     task_manager = Tasks()
 
@@ -15,3 +14,4 @@ def main():
     task_manager.remove_task(task1)
     print("After removing Task 1:")
     task_manager.list_tasks()
+main()
