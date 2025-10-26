@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from "@testing-library/user-event";
 import App from './App';
 import Task from './Task';
@@ -87,4 +87,100 @@ test("task list shows demo task when fetch fails", async () => {
 
   // Expect to see connection warning
   expect(screen.queryByText(/Not connected to backend/i)).toBeInTheDocument();
+});
+
+test("test adding a task with successful backend POST", async () => {
+  // Mock successful response for GET and POST
+  // Attribution: ChatGPT helped with this complex mock of two request types
+  const mockFetch = jest.spyOn(global, 'fetch')
+    .mockImplementation((url, options) => {
+      if (!options) { //GET
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve([
+            { name: "Task that was fetched", description: "Example description", completed: false }
+          ]),
+        });
+      }
+      if (options.method === 'POST') {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ message: 'Successful post' }),
+        });
+      }
+    });
+
+  // Mock the alert function so we can detect when it is called
+  window.alert = jest.fn();
+
+  render(<TaskList />);
+
+  // Except a task to be visible
+  const demo_task = await screen.findByText(/Task that was fetched/i);
+  expect(demo_task).toBeInTheDocument();
+
+  // Attribution: ChatGPT aided in writing these lines which find and modify the textboxes and click the button
+  const nameInput = screen.getByPlaceholderText('Write a letter');
+  const descriptionInput = screen.getByPlaceholderText('Use a ballpoint pen...');
+  const addButton = screen.getByRole('button', { name: /add/i });
+
+  fireEvent.change(nameInput, { target: { value: 'Do homework' } });
+  fireEvent.change(descriptionInput, { target: { value: 'Math exercises' } });
+  fireEvent.click(addButton);
+
+  // Wait for alert to be called
+  await waitFor(() => {
+    expect(window.alert).toHaveBeenCalledWith("Success: Successful post");
+  });
+
+  // Restore fetch and alert mocks
+  jest.restoreAllMocks();
+});
+
+test("test adding a task with unsuccessful backend POST", async () => {
+  // Mock successful response for GET; unsuccessful response for POST
+  // Attribution: ChatGPT helped with this complex mock of two request types
+  const mockFetch = jest.spyOn(global, 'fetch')
+    .mockImplementation((url, options) => {
+      if (!options) { //GET
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve([
+            { name: "Task that was fetched", description: "Example description", completed: false }
+          ]),
+        });
+      }
+      if (options.method === 'POST') {
+        return Promise.resolve({
+          ok: false,
+          json: () => Promise.resolve({}),
+        });
+      }
+    });
+
+  // Mock the alert function so we can detect when it is called
+  window.alert = jest.fn();
+
+  render(<TaskList />);
+
+  // Except a task to be visible
+  const demo_task = await screen.findByText(/Task that was fetched/i);
+  expect(demo_task).toBeInTheDocument();
+
+  // Attribution: ChatGPT aided in writing these lines which find and modify the textboxes and click the button
+  const nameInput = screen.getByPlaceholderText('Write a letter');
+  const descriptionInput = screen.getByPlaceholderText('Use a ballpoint pen...');
+  const addButton = screen.getByRole('button', { name: /add/i });
+
+  fireEvent.change(nameInput, { target: { value: 'Do homework' } });
+  fireEvent.change(descriptionInput, { target: { value: 'Math exercises' } });
+  fireEvent.click(addButton);
+
+  // Wait for alert to be called
+  await waitFor(() => {
+    expect(window.alert).toHaveBeenCalledWith("Error creating task");
+  });
+
+  // Restore fetch and alert mocks
+  jest.restoreAllMocks();
 });
