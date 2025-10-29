@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from task_routes import router
 from tasks import Task, Tasks
 from global_task_manager import task_manager
+from ai import ai_reordering
 
 def main():
 
