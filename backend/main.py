@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from task_routes import router
 from tasks import Task, Tasks
 from global_task_manager import task_manager
@@ -26,16 +27,17 @@ if __name__ == "__main__":
 
     app = FastAPI()
     app.include_router(router)
+
+    # allow the frontend to access the backend
+
+    origins = ["http://localhost:3000"]
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
     uvicorn.run(app, host="0.0.0.0", port=8000)
-
-
-    print("Testing AI reordering")
-    task_manager.add_task(Task("Task 66", "This task is not very important."))
-    task_manager.add_task(Task("Task 67", "This task is critical."))
-    task_manager.list_tasks()
-
-    ai_reordering(task_manager)
-
-    print("After AI reordering:")
-    task_manager.list_tasks()
-
