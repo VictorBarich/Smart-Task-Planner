@@ -11,6 +11,9 @@ class Task:
     def __mark_complete__(self):
         self.completed = True
 
+    def __mark_incomplete__(self):
+        self.completed = False
+
     def print_task(self):
         print(f"Task Name: {self.name}")
         print(f"Description: {self.description}")
@@ -28,6 +31,9 @@ class Tasks:
 
     def mark_task_complete(self, task):
         task.__mark_complete__()
+
+    def mark_task_incomplete(self, task):
+        task.__mark_incomplete__()
 
     def list_tasks(self):
         for task in self.tasks:
