@@ -89,18 +89,26 @@ test("task list shows demo task when fetch fails", async () => {
   expect(screen.queryByText(/Not connected to backend/i)).toBeInTheDocument();
 });
 
-test("test adding a task with successful backend POST", async () => {
-  // Mock successful response for GET and POST
-  // Attribution: ChatGPT helped with this complex mock of two request types
+test("test adding a task with successful backend POST and successful duplication test", async () => {
+  // Mock favorable response for GETs and POST
+  // Attribution: ChatGPT helped with this complex mock of multiple request types
   const mockFetch = jest.spyOn(global, 'fetch')
     .mockImplementation((url, options) => {
-      if (!options) { //GET
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve([
-            { name: "Task that was fetched", description: "Example description", completed: false }
-          ]),
-        });
+      if (!options || options.method == 'GET') { //GET
+        if (url == "http://localhost:8000/api/tasks/all") {
+          // mock response for fetch all tasks
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve([
+              { name: "Task that was fetched", description: "Example description", completed: false }
+            ]),
+          });
+        } else {
+          // mock response for checking if a task is duplicate as if it is not
+          return Promise.resolve(
+            new Response(JSON.stringify({ detail: "Task not found" }), { status: 404 })
+          );
+        }
       }
       if (options.method === 'POST') {
         return Promise.resolve({
@@ -137,18 +145,26 @@ test("test adding a task with successful backend POST", async () => {
   jest.restoreAllMocks();
 });
 
-test("test adding a task with unsuccessful backend POST", async () => {
-  // Mock successful response for GET; unsuccessful response for POST
-  // Attribution: ChatGPT helped with this complex mock of two request types
+test("test adding a task with unsuccessful backend POST but successful duplication test", async () => {
+  // Mock favorable response for GETs; unsuccessful response for POST
+  // Attribution: ChatGPT helped with this complex mock of multiple request types
   const mockFetch = jest.spyOn(global, 'fetch')
     .mockImplementation((url, options) => {
-      if (!options) { //GET
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve([
-            { name: "Task that was fetched", description: "Example description", completed: false }
-          ]),
-        });
+      if (!options || options.method == 'GET') { //GET
+        if (url == "http://localhost:8000/api/tasks/all") {
+          // mock response for fetch all tasks
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve([
+              { name: "Task that was fetched", description: "Example description", completed: false }
+            ]),
+          });
+        } else {
+          // mock response for checking if a task is duplicate as if it is not
+          return Promise.resolve(
+            new Response(JSON.stringify({ detail: "Task not found" }), { status: 404 })
+          );
+        }
       }
       if (options.method === 'POST') {
         return Promise.resolve({
@@ -179,6 +195,50 @@ test("test adding a task with unsuccessful backend POST", async () => {
   // Wait for alert to be called
   await waitFor(() => {
     expect(window.alert).toHaveBeenCalledWith("Error creating task");
+  });
+
+  // Restore fetch and alert mocks
+  jest.restoreAllMocks();
+});
+
+test("test adding a task with unsuccessful duplication test", async () => {
+  // Mock unfavorable response from duplication GET;
+  // Attribution: ChatGPT helped with this complex mock
+  const mockFetch = jest.spyOn(global, 'fetch')
+    .mockImplementation((url, options) => {
+      if (!options || options.method == 'GET') { //GET
+        if (url == "http://localhost:8000/api/tasks/all") {
+          // This should not be queried for this test
+        } else {
+          // mock response for checking if a task is duplicate as if it is not
+          return Promise.resolve(
+            new Response(JSON.stringify({ task: "Task_name", description: "Task_description" }), { status: 200 })
+          );
+        }
+      }
+    });
+
+  // Mock the alert function so we can detect when it is called
+  window.alert = jest.fn();
+
+  render(<TaskList />);
+
+  // Except a demo task to be visible
+  const demo_task = await screen.findByText(/Do the Laundry/i);
+  expect(demo_task).toBeInTheDocument();
+
+  // Attribution: ChatGPT aided in writing these lines which find and modify the textboxes and click the button
+  const nameInput = screen.getByPlaceholderText('Write a letter');
+  const descriptionInput = screen.getByPlaceholderText('Use a ballpoint pen...');
+  const addButton = screen.getByRole('button', { name: /add/i });
+
+  fireEvent.change(nameInput, { target: { value: 'Do homework' } });
+  fireEvent.change(descriptionInput, { target: { value: 'Math exercises' } });
+  fireEvent.click(addButton);
+
+  // Wait for alert to be called
+  await waitFor(() => {
+    expect(window.alert).toHaveBeenCalledWith("Error creating task: Task already exists.");
   });
 
   // Restore fetch and alert mocks

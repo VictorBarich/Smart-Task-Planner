@@ -56,6 +56,28 @@ function TaskList() {
   }, []);
 
   const AddTask = async (taskName, taskDescription) => {
+    // create a GET request to the backend to see if a task with the same name already exists
+    try {
+      const response = await fetch(`http://localhost:8000/api/tasks/get/${taskName}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      console.log(response)
+
+      // Error if we get a successful response back (found a task), we want a 404
+      if (response.status !== 404) {
+        throw new Error(`Successful Response: ${response.status}`);
+      }
+
+    } catch (error) {
+      // If task already exists, alert the user
+      alert('Error creating task: Task already exists.');
+      return;
+    }
+
+
     // create a POST request to the backend with the task name and description
     try {
       const response = await fetch('http://localhost:8000/api/tasks/add', {
