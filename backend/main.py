@@ -1,3 +1,4 @@
+from tasks import Task, Tasks
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from task_routes import router
@@ -19,6 +20,11 @@ def main():
     task_manager.remove_task(task1)
     print("After removing Task 1:")
     task_manager.list_tasks()
+
+    task_manager.mark_task_complete(task2)
+    print("After marking Task 2 as complete:")
+    task_manager.list_tasks()
+
 
 if __name__ == "__main__":
     import uvicorn
