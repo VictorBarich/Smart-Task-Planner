@@ -1,23 +1,29 @@
+from datetime import datetime
 
 class Task:
     def __init__(self, name, description):
         self.name = name
         self.completed = False
         self.description = description
+        self.due_date = None
 
     def __repr__(self):
-        return f"Task(name={self.name}, description={self.description}, completed={self.completed})"
-    
+        return f"Task(name={self.name}, description={self.description}, completed={self.completed}, due_date={self.due_date})"
+
     def __mark_complete__(self):
         self.completed = True
 
     def __mark_incomplete__(self):
         self.completed = False
 
+    def __set_due_date__(self, due_date: datetime):
+        self.due_date = due_date
+
     def print_task(self):
         print(f"Task Name: {self.name}")
         print(f"Description: {self.description}")
         print(f"Completed: {self.completed}")
+        print(f"Due Date: {self.due_date}")
 
 class Tasks:
     def __init__(self):
