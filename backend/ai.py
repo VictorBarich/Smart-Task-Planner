@@ -3,6 +3,7 @@ from tasks import Task, Tasks
 from dotenv import load_dotenv
 import google.generativeai as genai
 
+# Set up environment variables
 load_dotenv()
 API_KEY = os.getenv("API_KEY")
 
@@ -53,4 +54,5 @@ def ai_reordering(tasks_object):
     print(explanation_output)
     
 
+    # Return the updated tasks object
     return tasks_object
