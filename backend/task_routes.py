@@ -61,3 +61,18 @@ def delete_task(task_name: str):
             task_manager.remove_task(task)
             return {"message": f"Task '{task_name}' deleted successfully"}
     raise HTTPException(status_code=404, detail="Task not found")
+
+@router.post("/priority/{task_name}")
+def update_priority(task_name: str, priority: int):
+    for task in task_manager.tasks:
+        if task.name == task_name:
+            try:
+                task.set_priority(priority)
+            except ValueError as e:
+                raise HTTPException(status_code=400, detail=str(e))
+            return {
+                "message": f"Task '{task_name}' priority updated",
+                "name": task.name,
+                "priority": task.priority,
+            }
+    raise HTTPException(status_code=404, detail="Task not found")
