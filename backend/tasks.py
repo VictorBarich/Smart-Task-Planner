@@ -1,9 +1,11 @@
+from datetime import datetime
 
 class Task:
     def __init__(self, name, description):
         self.name = name
         self.completed = False
         self.description = description
+        self.active_since = datetime.now()
 
     def __repr__(self):
         return f"Task(name={self.name}, description={self.description}, completed={self.completed})"
@@ -18,6 +20,12 @@ class Task:
         print(f"Task Name: {self.name}")
         print(f"Description: {self.description}")
         print(f"Completed: {self.completed}")
+
+    def set_active_since(self, new_time: datetime):
+        if not isinstance(new_time, datetime):
+            raise TypeError("new_time must be a datetime object")
+        
+        self.active_since = new_time
 
 class Tasks:
     def __init__(self):
