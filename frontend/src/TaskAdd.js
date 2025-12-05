@@ -15,7 +15,7 @@ function TaskAdd({ callbackFunction }) {
                 <p>Task Description: <textarea placeholder="Use a ballpoint pen..." value={taskDescription} onChange={(event)=>setTaskDescription(event.target.value)}></textarea></p>
             </div>
             <div className="TaskRow">
-                <button className="TaskAddButton" onClick={()=>callbackFunction(taskName, taskDescription)}>Add</button>
+                <button className="TaskAddButton" onClick={()=> { callbackFunction(taskName, taskDescription); setTaskName(""); setTaskDescription(""); }}>Add</button>
             </div>
         </div>
     );
