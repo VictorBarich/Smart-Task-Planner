@@ -21,7 +21,7 @@ def create_task(task: TaskCreate):
 @router.get("/all")
 def get_all_tasks():
     return [
-        {"name": task.name, "description": task.description}
+        {"name": task.name, "description": task.description, "completed": task.completed, "due_date": task.due_date}
         for task in task_manager.tasks
     ]
 
@@ -32,8 +32,10 @@ def get_task(task_name: str):
         if task.name == task_name:
             return {
                 "name": task.name, 
-                "description": task.description
-                }
+                "description": task.description,
+                "completed": task.completed,
+                "due_date": task.due_date
+            }
     raise HTTPException(status_code=404, detail="Task not found")
 
 # Mark a task as complete by name
