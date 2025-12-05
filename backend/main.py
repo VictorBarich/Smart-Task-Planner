@@ -5,15 +5,18 @@ from task_routes import router
 from tasks import Task, Tasks
 from global_task_manager import task_manager
 from ai import ai_reordering
+import uvicorn
 
 def main():
 
+    # Example task creation
     task1 = Task("Task 1", "This is the first task.")
     task2 = Task("Task 2", "This is the second task.")
 
     task1.__set_due_date__("2024-10-01")
     task2.__set_due_date__("2024-10-05")
 
+    # Adds example tasks to global task manager
     task_manager.add_task(task1)
     task_manager.add_task(task2)
 
@@ -32,7 +35,6 @@ def main():
 
 
 if __name__ == "__main__":
-    import uvicorn
 
     main() # Example task_manager manipulation
 
