@@ -222,7 +222,6 @@ test("test adding a task with unsuccessful duplication test", async () => {
   window.alert = jest.fn();
 
   render(<TaskList />);
-
   // Except a demo task to be visible
   const demo_task = await screen.findByText(/Do the Laundry/i);
   expect(demo_task).toBeInTheDocument();
@@ -239,6 +238,77 @@ test("test adding a task with unsuccessful duplication test", async () => {
   // Wait for alert to be called
   await waitFor(() => {
     expect(window.alert).toHaveBeenCalledWith("Error creating task: Task already exists.");
+  });
+
+  // Restore fetch and alert mocks
+  jest.restoreAllMocks();
+});
+
+test("test deleting a task with successful backend DELETE", async () => {
+  // Patterned off of above test cases
+  // Mock successful response from DELETE
+  const mockFetch = jest.spyOn(global, 'fetch')
+    .mockImplementation((url, options) => {
+      if (options.method === 'DELETE') {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ message: "Task 'Wash the Dishes' deleted successfully" }),
+        });
+      }
+    });
+
+  // Mock the alert function so we can detect when it is called
+  window.alert = jest.fn();
+
+  render(<TaskList />);
+  // Except a task to be visible
+  const demo_task = await screen.findByText(/Wash the Dishes/i);
+  expect(demo_task).toBeInTheDocument();
+
+  const deleteButton = await screen.getAllByText(/Delete Task/i)[0]; // There will be multiple since there are multiple tasks, just choose the first one (Wash the Dishes)
+
+  fireEvent.click(deleteButton);
+
+  // Wait for alert to be called
+  await waitFor(() => {
+    expect(window.alert).toHaveBeenCalledWith("Success: Task 'Wash the Dishes' deleted successfully");
+  });
+
+  // Restore fetch and alert mocks
+  jest.restoreAllMocks();
+});
+
+test("test deleting a task with unsuccessful backend DELETE", async () => {
+  // Patterned off of above test cases
+  // Mock unsuccessful response from DELETE
+  const mockFetch = jest.spyOn(global, 'fetch')
+    .mockImplementation((url, options) => {
+      if (options.method === 'DELETE') {
+        return Promise.resolve({
+          ok: false,
+          json: () => Promise.resolve({}),
+        });
+      }
+    });
+
+  // Mock the alert function so we can detect when it is called
+  window.alert = jest.fn();
+
+  render(<TaskList />);
+
+  // Except a task to be visible
+  const demo_task = await screen.findByText(/Feed the Dog/i);
+  expect(demo_task).toBeInTheDocument();
+
+  // There will be multiple since there are multiple tasks, just choose the third one (index 2) (Feed the Dog)
+  // This increases test coverage by deleting a completed task
+  const deleteButton = await screen.getAllByText(/Delete Task/i)[2];
+
+  fireEvent.click(deleteButton);
+
+  // Wait for alert to be called
+  await waitFor(() => {
+    expect(window.alert).toHaveBeenCalledWith("Error deleting task. Note that task deletion is only available if connected to the backend.");
   });
 
   // Restore fetch and alert mocks

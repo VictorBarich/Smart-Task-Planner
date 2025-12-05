@@ -20,7 +20,7 @@ def create_task(task: TaskCreate):
 @router.get("/all")
 def get_all_tasks():
     return [
-        {"name": task.name, "description": task.description}
+        {"name": task.name, "description": task.description, "completed": task.completed, "due_date": task.due_date}
         for task in task_manager.tasks
     ]
 
@@ -31,8 +31,28 @@ def get_task(task_name: str):
         if task.name == task_name:
             return {
                 "name": task.name, 
-                "description": task.description
-                }
+                "description": task.description,
+                "completed": task.completed,
+                "due_date": task.due_date
+            }
+    raise HTTPException(status_code=404, detail="Task not found")
+
+# Mark a task as complete by name
+@router.post("/complete/{task_name}")
+def complete_task(task_name: str):
+    for task in task_manager.tasks:
+        if task.name == task_name:
+            task_manager.mark_task_complete(task)
+            return {"message": f"Task '{task_name}' marked as complete"}
+    raise HTTPException(status_code=404, detail="Task not found")
+
+# Mark a task as incomplete by name
+@router.post("/incomplete/{task_name}")
+def incomplete_task(task_name: str):
+    for task in task_manager.tasks:
+        if task.name == task_name:
+            task_manager.mark_task_incomplete(task)
+            return {"message": f"Task '{task_name}' marked as incomplete"}
     raise HTTPException(status_code=404, detail="Task not found")
 
 # Delete a task by name

@@ -3,6 +3,7 @@ from tasks import Task, Tasks
 from dotenv import load_dotenv
 import google.generativeai as genai
 
+# Set up environment variables
 load_dotenv()
 API_KEY = os.getenv("API_KEY")
 
@@ -42,4 +43,16 @@ def ai_reordering(tasks_object):
     name_task_mapping = {task.name: task for task in tasks}
     tasks_object.tasks = [name_task_mapping[name] for name in list_ordered_names if name in name_task_mapping]
 
+
+
+    # Prompt the AI to explain its reasoning (useful for debugging and maybe user-facing later)
+    explanatory_prompt = """You ordered the tasks in the following way. Explain your reasoning for why each task is ordered like it is. Here are the tasks:\n"""
+    for i in range(len(tasks_object.tasks)):
+        explanatory_prompt += f"{i}. Task Name: {tasks_object.tasks[i].name}. Task Description: {tasks_object.tasks[i].description}\n"
+
+    explanation_output = model.generate_content(explanatory_prompt).text
+    print(explanation_output)
+    
+
+    # Return the updated tasks object
     return tasks_object
