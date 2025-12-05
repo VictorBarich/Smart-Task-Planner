@@ -128,6 +128,31 @@ function TaskList() {
     }
   };
 
+  const PostTaskCompletionStatus = async (taskName, completed) => {
+    // create a DELETE request to the backend with the task name
+    try {
+      const response = await fetch(`http://localhost:8000/api/tasks/${completed ? '' : 'in'}complete/${taskName}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      // If successful, alert the user and re-fetch the task list
+      alert(`Success: ${data.message}`);
+      fetchTaskList();
+    } catch (error) {
+      // If unsuccessful, alert the user
+      alert("Task completion status change not retained. Note that retaining task completion status is only available if connected to the backend.");
+    }
+  };
+
   return (
     <div className="TaskList">
       <h2>Tasks</h2>
@@ -146,6 +171,7 @@ function TaskList() {
                     i === ind ? { ...task, completed: true } : task
                   )
                 );
+                PostTaskCompletionStatus(task.name, true);
               };
               if (!task.completed)
                 // Use a 1-indexed task list
@@ -163,6 +189,7 @@ function TaskList() {
                     i === ind ? { ...task, completed: false } : task
                   )
                 );
+                PostTaskCompletionStatus(task.name, false);
               };
               if (task.completed)
                 // Use a 1-indexed task list
