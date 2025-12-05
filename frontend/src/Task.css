@@ -21,3 +21,12 @@
     transform: scale(2);
     margin-right: 20px;
 }
+
+.TaskDeleteButton {
+    background-color: #FFCCCB;
+    margin: 8px;
+    border: 5px solid red;
+    border-radius: 4px;
+    font-family: sans-serif;
+    font-size: larger;
+}
