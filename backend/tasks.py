@@ -1,14 +1,14 @@
 from datetime import datetime
 
 class Task:
-    def __init__(self, name, description):
+    def __init__(self, name, description, category="General"):
         self.name = name
         self.completed = False
         self.description = description
         self.due_date = None
-
+        self.category = category
     def __repr__(self):
-        return f"Task(name={self.name}, description={self.description}, completed={self.completed}, due_date={self.due_date})"
+        return f"Task(name={self.name}, category={self.category}, description={self.description}, completed={self.completed}, due_date={self.due_date})"
 
     def __mark_complete__(self):
         self.completed = True
@@ -21,6 +21,7 @@ class Task:
 
     def print_task(self):
         print(f"Task Name: {self.name}")
+        print(f"Category: {self.category}")
         print(f"Description: {self.description}")
         print(f"Completed: {self.completed}")
         print(f"Due Date: {self.due_date}")
@@ -28,9 +29,12 @@ class Task:
 class Tasks:
     def __init__(self):
         self.tasks = []
+        self.categories = ["General"]
 
     def add_task(self, task):
         self.tasks.append(task)
+        if task.category not in self.categories:
+            self.categories.append(task.category)
 
     def remove_task(self, task):
         self.tasks.remove(task)
@@ -42,6 +46,9 @@ class Tasks:
         task.__mark_incomplete__()
 
     def list_tasks(self):
-        for task in self.tasks:
-            task.print_task()
-            print("-----")
+        for category in self.categories:
+            print(f"Category: {category}")
+            for task in self.tasks:
+                if task.category == category:
+                    task.print_task()
+                    print("-----")
