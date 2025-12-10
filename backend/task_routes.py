@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 from tasks import Task, Tasks
 from global_task_manager import task_manager
 from pydantic import BaseModel
+from datetime import datetime
 
 class TaskCreate(BaseModel):
     name: str
@@ -64,6 +65,21 @@ def delete_task(task_name: str):
             return {"message": f"Task '{task_name}' deleted successfully"}
     raise HTTPException(status_code=404, detail="Task not found")
 
+@router.post("/active-since/{task_name}")
+def update_active_since(task_name: str, active_since: datetime):
+    """
+    Example request:
+    POST /api/tasks/active-since/MyTask?active_since=2025-11-14T10:30:00
+    """
+    for task in task_manager.tasks:
+        if task.name == task_name:
+            task.set_active_since(active_since)
+            return {
+                "message": f"Task '{task_name}' active_since updated",
+                "name": task.name,
+                "active_since": task.active_since.isoformat()
+            }
+              
 @router.post("/priority/{task_name}")
 def update_priority(task_name: str, priority: int):
     for task in task_manager.tasks:

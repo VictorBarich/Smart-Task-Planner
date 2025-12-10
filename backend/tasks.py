@@ -6,6 +6,7 @@ class Task:
         self.name = name
         self.completed = False
         self.description = description
+        self.active_since = datetime.now()
         self.due_date = None
         self.category = category
         if not (1 <= priority <= 10):
@@ -36,6 +37,12 @@ class Task:
         if not (1 <= new_priority <= 10):
             raise ValueError("new_priority must be between 1 and 10")
         self.priority = new_priority
+
+    def set_active_since(self, new_time: datetime):
+        if not isinstance(new_time, datetime):
+            raise TypeError("new_time must be a datetime object")
+        
+        self.active_since = new_time
 
 class Tasks:
     def __init__(self):
