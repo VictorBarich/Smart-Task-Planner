@@ -77,6 +77,20 @@ def update_active_since(task_name: str, active_since: datetime):
             return {
                 "message": f"Task '{task_name}' active_since updated",
                 "name": task.name,
-                "active_since": task.active_since.isoformat(),
+                "active_since": task.active_since.isoformat()
+            }
+              
+@router.post("/priority/{task_name}")
+def update_priority(task_name: str, priority: int):
+    for task in task_manager.tasks:
+        if task.name == task_name:
+            try:
+                task.set_priority(priority)
+            except ValueError as e:
+                raise HTTPException(status_code=400, detail=str(e))
+            return {
+                "message": f"Task '{task_name}' priority updated",
+                "name": task.name,
+                "priority": task.priority,
             }
     raise HTTPException(status_code=404, detail="Task not found")

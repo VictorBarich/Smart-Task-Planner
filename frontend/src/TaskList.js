@@ -56,6 +56,28 @@ function TaskList() {
   }, []);
 
   const AddTask = async (taskName, taskDescription) => {
+    // create a GET request to the backend to see if a task with the same name already exists
+    try {
+      const response = await fetch(`http://localhost:8000/api/tasks/get/${taskName}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      console.log(response)
+
+      // Error if we get a successful response back (found a task), we want a 404
+      if (response.status !== 404) {
+        throw new Error(`Successful Response: ${response.status}`);
+      }
+
+    } catch (error) {
+      // If task already exists, alert the user
+      alert('Error creating task: Task already exists.');
+      return;
+    }
+
+
     // create a POST request to the backend with the task name and description
     try {
       const response = await fetch('http://localhost:8000/api/tasks/add', {
@@ -81,6 +103,31 @@ function TaskList() {
     }
   };
 
+  const DeleteTask = async (taskName) => {
+    // create a DELETE request to the backend with the task name
+    try {
+      const response = await fetch(`http://localhost:8000/api/tasks/delete/${taskName}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      // If successful, alert the user and re-fetch the task list
+      alert(`Success: ${data.message}`);
+      fetchTaskList();
+    } catch (error) {
+      // If unsuccessful, alert the user
+      alert("Error deleting task. Note that task deletion is only available if connected to the backend.");
+    }
+  };
+
   return (
     <div className="TaskList">
       <h2>Tasks</h2>
@@ -102,7 +149,7 @@ function TaskList() {
               };
               if (!task.completed)
                 // Use a 1-indexed task list
-                return <Task index={i + 1} name={task.name} description={task.description} completed={task.completed} key={i} getTasks={tasks} checkboxActionFunction={setTaskState} />
+                return <Task index={i + 1} name={task.name} description={task.description} completed={task.completed} key={i} getTasks={tasks} checkboxActionFunction={setTaskState} deletionCallbackFunction={()=> DeleteTask(task.name)} />
               else
                 return null;
             })}
@@ -119,7 +166,7 @@ function TaskList() {
               };
               if (task.completed)
                 // Use a 1-indexed task list
-                return <Task index={i + 1} name={task.name} description={task.description} completed={task.completed} key={i} getTasks={tasks} checkboxActionFunction={setTaskState} />
+                return <Task index={i + 1} name={task.name} description={task.description} completed={task.completed} key={i} getTasks={tasks} checkboxActionFunction={setTaskState} deletionCallbackFunction={()=> DeleteTask(task.name)} />
               else
                 return null;
             })}
