@@ -1,12 +1,17 @@
 from datetime import datetime
 
 class Task:
-    def __init__(self, name, description, category="General"):
+
+    def __init__(self, name, description, category="General", priority: int = 5):
         self.name = name
         self.completed = False
         self.description = description
         self.due_date = None
         self.category = category
+        if not (1 <= priority <= 10):
+            raise ValueError("priority must be between 1 and 10")
+        self.priority = priority
+       
     def __repr__(self):
         return f"Task(name={self.name}, category={self.category}, description={self.description}, completed={self.completed}, due_date={self.due_date})"
 
@@ -25,6 +30,12 @@ class Task:
         print(f"Description: {self.description}")
         print(f"Completed: {self.completed}")
         print(f"Due Date: {self.due_date}")
+        print(f"Priority: {self.priority}")
+
+    def set_priority(self, new_priority: int):
+        if not (1 <= new_priority <= 10):
+            raise ValueError("new_priority must be between 1 and 10")
+        self.priority = new_priority
 
 class Tasks:
     def __init__(self):
