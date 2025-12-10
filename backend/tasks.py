@@ -1,27 +1,36 @@
+from datetime import datetime
 
 class Task:
-    def __init__(self, name, description, priority: int = 5):
+
+    def __init__(self, name, description, category="General", priority: int = 5):
         self.name = name
         self.completed = False
         self.description = description
-
+        self.due_date = None
+        self.category = category
         if not (1 <= priority <= 10):
             raise ValueError("priority must be between 1 and 10")
         self.priority = priority
-
+       
     def __repr__(self):
-        return f"Task(name={self.name}, description={self.description}, completed={self.completed})"
-    
+        return f"Task(name={self.name}, category={self.category}, description={self.description}, completed={self.completed}, due_date={self.due_date})"
+
     def __mark_complete__(self):
         self.completed = True
 
     def __mark_incomplete__(self):
         self.completed = False
 
+    def __set_due_date__(self, due_date: datetime):
+        self.due_date = due_date
+
     def print_task(self):
         print(f"Task Name: {self.name}")
+        print(f"Category: {self.category}")
         print(f"Description: {self.description}")
         print(f"Completed: {self.completed}")
+        print(f"Due Date: {self.due_date}")
+        print(f"Priority: {self.priority}")
 
     def set_priority(self, new_priority: int):
         if not (1 <= new_priority <= 10):
@@ -31,9 +40,12 @@ class Task:
 class Tasks:
     def __init__(self):
         self.tasks = []
+        self.categories = ["General"]
 
     def add_task(self, task):
         self.tasks.append(task)
+        if task.category not in self.categories:
+            self.categories.append(task.category)
 
     def remove_task(self, task):
         self.tasks.remove(task)
@@ -45,6 +57,9 @@ class Tasks:
         task.__mark_incomplete__()
 
     def list_tasks(self):
-        for task in self.tasks:
-            task.print_task()
-            print("-----")
+        for category in self.categories:
+            print(f"Category: {category}")
+            for task in self.tasks:
+                if task.category == category:
+                    task.print_task()
+                    print("-----")

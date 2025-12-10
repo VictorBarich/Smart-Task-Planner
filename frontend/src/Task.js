@@ -1,6 +1,6 @@
 import "./Task.css";
 
-function Task({ index, name, description, completed, checkboxActionFunction }) {
+function Task({ index, name, description, completed, checkboxActionFunction, deletionCallbackFunction }) {
 
   return (
     <div className="Task">
@@ -10,6 +10,7 @@ function Task({ index, name, description, completed, checkboxActionFunction }) {
       <div className="TaskRow">
         <p>{description}</p>
       </div>
+      <button className="TaskDeleteButton" onClick={deletionCallbackFunction}>&#10060; Delete Task</button>
     </div>
   );
 }
