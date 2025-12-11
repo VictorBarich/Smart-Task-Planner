@@ -314,3 +314,94 @@ test("test deleting a task with unsuccessful backend DELETE", async () => {
   // Restore fetch and alert mocks
   jest.restoreAllMocks();
 });
+
+test("test changing task completion status with successful backend response", async () => {
+  // Patterned off of above test cases
+  const mockFetch = jest.spyOn(global, 'fetch')
+    .mockImplementation((url, options) => {
+      if (url == "http://localhost:8000/api/tasks/all") {
+        // mock successful response for fetch all tasks
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve([
+            { name: "Fetched Task", description: "Example description", completed: false }
+          ]),
+        });
+      } else if (url == "http://localhost:8000/api/tasks/complete/Fetched Task") {
+        // mock successful response for POST task 'Fetched Task' as complete
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(
+            { "message": "Task 'Fetched Task' marked as complete" }
+          ),
+        });
+      }
+    });
+
+  // Mock the alert function so we can detect when it is called
+  window.alert = jest.fn();
+
+  const user = userEvent.setup();
+
+  render(<TaskList />);
+
+  // Except a task to be visible
+  const demo_task = await screen.findByText(/Fetched Task/i);
+  expect(demo_task).toBeInTheDocument();
+
+  const checkboxes = screen.getAllByRole('checkbox');
+  await user.click(checkboxes[0]); // click the first checkbox (there should only be one), which corresponds to the task 'Fetchedn Task'
+  expect(checkboxes[0].checked).toBe(true);
+
+  // Wait for alert to be called
+  await waitFor(() => {
+    expect(window.alert).toHaveBeenCalledWith("Success: Task 'Fetched Task' marked as complete");
+  });
+
+  // Restore fetch and alert mocks
+  jest.restoreAllMocks();
+});
+
+test("test changing task completion status with unsuccessful backend response", async () => {
+  // Patterned off of above test cases
+  const mockFetch = jest.spyOn(global, 'fetch')
+    .mockImplementation((url, options) => {
+      if (url == "http://localhost:8000/api/tasks/all") {
+        // mock successful response for fetch all tasks
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve([
+            { name: "Fetched Task", description: "Example description", completed: false }
+          ]),
+        });
+      } else if (url == "http://localhost:8000/api/tasks/complete/Fetched Task") {
+        // mock unsuccessful response for POST task 'Fetched Task' as complete
+        return Promise.resolve({
+          ok: false
+        });
+      }
+    });
+
+  // Mock the alert function so we can detect when it is called
+  window.alert = jest.fn();
+
+  const user = userEvent.setup();
+
+  render(<TaskList />);
+
+  // Except a task to be visible
+  const demo_task = await screen.findByText(/Fetched Task/i);
+  expect(demo_task).toBeInTheDocument();
+
+  const checkboxes = screen.getAllByRole('checkbox');
+  await user.click(checkboxes[0]); // click the first checkbox (there should only be one), which corresponds to the task 'Fetchedn Task'
+  expect(checkboxes[0].checked).toBe(true);
+
+  // Wait for alert to be called
+  await waitFor(() => {
+    expect(window.alert).toHaveBeenCalledWith("Task completion status change not retained. Note that retaining task completion status is only available if connected to the backend.");
+  });
+
+  // Restore fetch and alert mocks
+  jest.restoreAllMocks();
+});
