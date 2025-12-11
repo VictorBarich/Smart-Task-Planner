@@ -1,8 +1,70 @@
-.TaskAddButton {
-    background-color: lightgreen;
-    margin: 8px;
-    border: 5px solid green;
-    border-radius: 4px;
-    font-family: sans-serif;
-    font-size: larger;
+/*Attribution: ChatGPT helped with this CSS*/
+.taskadd-card {
+  background: #2b2f3a;
+  border: 1px solid #3a3f4a;
+  border-radius: 12px;
+  padding: 20px;
+  color: #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.taskadd-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.taskadd-field label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #d1d5db;
+}
+
+.taskadd-input,
+.taskadd-textarea {
+  background: #1f2430;
+  border: 1px solid #3b3f4a;
+  color: #f1f5f9;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  resize: none;
+  transition: border 0.15s ease, box-shadow 0.15s ease;
+}
+
+.taskadd-input:focus,
+.taskadd-textarea:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.35);
+}
+
+.taskadd-textarea {
+  min-height: 80px;
+  line-height: 1.35;
+}
+
+.taskadd-button {
+  background: #10b981;
+  border: none;
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 6px;
+  align-self: flex-start;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.taskadd-button:hover {
+  background: #059669;
+  transform: scale(1.03);
+}
+
+.taskadd-button:active {
+  transform: scale(0.97);
 }

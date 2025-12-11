@@ -1,13 +1,16 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import userEvent from "@testing-library/user-event";
 import App from './App';
 import Task from './Task';
 import TaskList from './TaskList';
+import { ToastContext, ToastProvider, useToast } from "./ToastContext";
 
-test('main page renders tasks header', () => {
+// Attribution: ChatGPT helped with conversion from mocking alerts to mocking toasts
+
+test('main page renders app logo', () => {
   render(<App />);
-  const taskHeader = screen.getByText(/Tasks/i);
-  expect(taskHeader).toBeInTheDocument();
+  const appLogo = screen.getByAltText(/Logo Image/i);
+  expect(appLogo).toBeInTheDocument();
 });
 
 test('Task renders passed in information', () => {
@@ -22,17 +25,18 @@ test('Task checkbox executes action function when checked', async () => {
   var executed = false;
 
   const user = userEvent.setup();
-  render(<Task index={999} name={"TestABC"} completed={false} checkboxActionFunction={() => { executed = true }} />);
+  render(<ToastProvider><Task index={999} name={"TestABC"} completed={false} checkboxActionFunction={() => { executed = true }} /></ToastProvider>);
   const checkbox = screen.getByRole('checkbox');
   expect(checkbox).not.toBeChecked();
   await user.click(checkbox);
-  expect(checkbox).toBeChecked();
   expect(executed).toBe(true);
 });
 
 test('Test result of clicking all task checkboxes', async () => {
   const user = userEvent.setup();
-  render(<TaskList />);
+    const mockAddToast = jest.fn();
+
+  render(<ToastProvider><TaskList /></ToastProvider>);
   // Wait for loading to disappear and tasks to appear
   const task = await screen.findByText(/To-Do/i);
   const checkboxes = screen.getAllByRole('checkbox');
@@ -59,7 +63,7 @@ test("task list from successful backend fetch", async () => {
     })
   );
 
-  render(<TaskList />);
+  render(<ToastProvider><TaskList /></ToastProvider>);
 
   // Except a task to be visible
   const demo_task = await screen.findByText(/Task that was fetched/i);
@@ -79,7 +83,7 @@ test("task list shows demo task when fetch fails", async () => {
     })
   );
 
-  render(<TaskList />);
+  render(<ToastProvider><TaskList /></ToastProvider>);
 
   // Except a demo task to be visible
   const demo_task = await screen.findByText(/Wash the Dishes/i);
@@ -118,10 +122,14 @@ test("test adding a task with successful backend POST and successful duplication
       }
     });
 
-  // Mock the alert function so we can detect when it is called
-  window.alert = jest.fn();
+  // Mock the toast function so we can detect when it is called
+  const mockAddToast = jest.fn();
 
-  render(<TaskList />);
+  render(
+    <ToastContext.Provider value={{ addToast: mockAddToast }}>
+      <TaskList />
+    </ToastContext.Provider>
+  );
 
   // Except a task to be visible
   const demo_task = await screen.findByText(/Task that was fetched/i);
@@ -138,7 +146,7 @@ test("test adding a task with successful backend POST and successful duplication
 
   // Wait for alert to be called
   await waitFor(() => {
-    expect(window.alert).toHaveBeenCalledWith("Success: Successful post");
+    expect(mockAddToast).toHaveBeenCalledWith("Success: Successful post", "success");
   });
 
   // Restore fetch and alert mocks
@@ -174,10 +182,10 @@ test("test adding a task with unsuccessful backend POST but successful duplicati
       }
     });
 
-  // Mock the alert function so we can detect when it is called
-  window.alert = jest.fn();
+  // Mock the toast function so we can detect when it is called
+  const mockAddToast = jest.fn();
 
-  render(<TaskList />);
+  render(<ToastContext.Provider value={{ addToast: mockAddToast }}><TaskList /></ToastContext.Provider>);
 
   // Except a task to be visible
   const demo_task = await screen.findByText(/Task that was fetched/i);
@@ -194,7 +202,7 @@ test("test adding a task with unsuccessful backend POST but successful duplicati
 
   // Wait for alert to be called
   await waitFor(() => {
-    expect(window.alert).toHaveBeenCalledWith("Error creating task");
+    expect(mockAddToast).toHaveBeenCalledWith("Error creating task", "error");
   });
 
   // Restore fetch and alert mocks
@@ -218,10 +226,10 @@ test("test adding a task with unsuccessful duplication test", async () => {
       }
     });
 
-  // Mock the alert function so we can detect when it is called
-  window.alert = jest.fn();
+  // Mock the toast function so we can detect when it is called
+  const mockAddToast = jest.fn();
 
-  render(<TaskList />);
+  render(<ToastContext.Provider value={{ addToast: mockAddToast }}><TaskList /></ToastContext.Provider>);
   // Except a demo task to be visible
   const demo_task = await screen.findByText(/Do the Laundry/i);
   expect(demo_task).toBeInTheDocument();
@@ -237,7 +245,7 @@ test("test adding a task with unsuccessful duplication test", async () => {
 
   // Wait for alert to be called
   await waitFor(() => {
-    expect(window.alert).toHaveBeenCalledWith("Error creating task: Task already exists.");
+    expect(mockAddToast).toHaveBeenCalledWith("Error creating task: Task already exists or you may not be connected to the backend.", "error");
   });
 
   // Restore fetch and alert mocks
@@ -257,21 +265,21 @@ test("test deleting a task with successful backend DELETE", async () => {
       }
     });
 
-  // Mock the alert function so we can detect when it is called
-  window.alert = jest.fn();
+  // Mock the toast function so we can detect when it is called
+  const mockAddToast = jest.fn();
 
-  render(<TaskList />);
+  render(<ToastContext.Provider value={{ addToast: mockAddToast }}><TaskList /></ToastContext.Provider>);
   // Except a task to be visible
   const demo_task = await screen.findByText(/Wash the Dishes/i);
   expect(demo_task).toBeInTheDocument();
 
-  const deleteButton = await screen.getAllByText(/Delete Task/i)[0]; // There will be multiple since there are multiple tasks, just choose the first one (Wash the Dishes)
+  const deleteButton = await screen.getAllByText(/Delete/i)[0]; // There will be multiple since there are multiple tasks, just choose the first one (Wash the Dishes)
 
   fireEvent.click(deleteButton);
 
   // Wait for alert to be called
   await waitFor(() => {
-    expect(window.alert).toHaveBeenCalledWith("Success: Task 'Wash the Dishes' deleted successfully");
+    expect(mockAddToast).toHaveBeenCalledWith("Success: Task 'Wash the Dishes' deleted successfully", "success");
   });
 
   // Restore fetch and alert mocks
@@ -291,10 +299,10 @@ test("test deleting a task with unsuccessful backend DELETE", async () => {
       }
     });
 
-  // Mock the alert function so we can detect when it is called
-  window.alert = jest.fn();
+  // Mock the toast function so we can detect when it is called
+  const mockAddToast = jest.fn();
 
-  render(<TaskList />);
+  render(<ToastContext.Provider value={{ addToast: mockAddToast }}><TaskList /></ToastContext.Provider>);
 
   // Except a task to be visible
   const demo_task = await screen.findByText(/Feed the Dog/i);
@@ -302,13 +310,13 @@ test("test deleting a task with unsuccessful backend DELETE", async () => {
 
   // There will be multiple since there are multiple tasks, just choose the third one (index 2) (Feed the Dog)
   // This increases test coverage by deleting a completed task
-  const deleteButton = await screen.getAllByText(/Delete Task/i)[2];
+  const deleteButton = await screen.getAllByText(/Delete/i)[2];
 
   fireEvent.click(deleteButton);
 
   // Wait for alert to be called
   await waitFor(() => {
-    expect(window.alert).toHaveBeenCalledWith("Error deleting task. Note that task deletion is only available if connected to the backend.");
+    expect(mockAddToast).toHaveBeenCalledWith("Error deleting task. Note that task deletion is only available if connected to the backend.", "error");
   });
 
   // Restore fetch and alert mocks
@@ -338,12 +346,12 @@ test("test changing task completion status with successful backend response", as
       }
     });
 
-  // Mock the alert function so we can detect when it is called
-  window.alert = jest.fn();
+  // Mock the toast function so we can detect when it is called
+  const mockAddToast = jest.fn();
 
   const user = userEvent.setup();
 
-  render(<TaskList />);
+  render(<ToastContext.Provider value={{ addToast: mockAddToast }}><TaskList /></ToastContext.Provider>);
 
   // Except a task to be visible
   const demo_task = await screen.findByText(/Fetched Task/i);
@@ -355,7 +363,7 @@ test("test changing task completion status with successful backend response", as
 
   // Wait for alert to be called
   await waitFor(() => {
-    expect(window.alert).toHaveBeenCalledWith("Success: Task 'Fetched Task' marked as complete");
+    expect(mockAddToast).toHaveBeenCalledWith("Success: Task 'Fetched Task' marked as complete", "success");
   });
 
   // Restore fetch and alert mocks
@@ -382,12 +390,12 @@ test("test changing task completion status with unsuccessful backend response", 
       }
     });
 
-  // Mock the alert function so we can detect when it is called
-  window.alert = jest.fn();
+  // Mock the toast function so we can detect when it is called
+  const mockAddToast = jest.fn();
 
   const user = userEvent.setup();
 
-  render(<TaskList />);
+  render(<ToastContext.Provider value={{ addToast: mockAddToast }}><TaskList /></ToastContext.Provider>);
 
   // Except a task to be visible
   const demo_task = await screen.findByText(/Fetched Task/i);
@@ -399,9 +407,85 @@ test("test changing task completion status with unsuccessful backend response", 
 
   // Wait for alert to be called
   await waitFor(() => {
-    expect(window.alert).toHaveBeenCalledWith("Task completion status change not retained. Note that retaining task completion status is only available if connected to the backend.");
+    expect(mockAddToast).toHaveBeenCalledWith("Task completion status change not retained. Note that retaining task completion status is only available if connected to the backend.", "error");
   });
 
   // Restore fetch and alert mocks
   jest.restoreAllMocks();
+});
+
+// Attribution: ChatGPT wrote this unit test for its Toast component with my oversight:
+describe("ToastContext", () => {
+  let originalDateNow;
+  beforeAll(() => {
+    originalDateNow = Date.now;
+  });
+
+  afterAll(() => {
+    global.Date.now = originalDateNow;
+  });
+
+it("adds and removes toasts correctly", async () => {
+  jest.useFakeTimers();
+  const realDateNow = Date.now;
+  let nextId = 1;
+  global.Date.now = jest.fn(() => nextId++);
+
+  const TestComponent = () => {
+    const { addToast } = useToast();
+    return (
+      <>
+        <button onClick={() => addToast("Hello")}>Add Toast</button>
+        <button onClick={() => addToast("World")}>Add Second Toast</button>
+      </>
+    );
+  };
+
+  render(
+    <ToastProvider>
+      <TestComponent />
+    </ToastProvider>
+  );
+
+  // Add first toast
+  await act(async () => {
+    fireEvent.click(screen.getByText("Add Toast"));
+  });
+
+  // Add second toast
+  await act(async () => {
+    fireEvent.click(screen.getByText("Add Second Toast"));
+  });
+
+  // At this point both toasts should exist
+  expect(screen.getByText("Hello")).toBeInTheDocument();
+  expect(screen.getByText("World")).toBeInTheDocument();
+
+  // Fast-forward 3s → first toast should start leaving
+  act(() => {
+    jest.advanceTimersByTime(3000);
+  });
+
+  const leavingToast = document.querySelector(".toast-exit");
+  expect(leavingToast).toBeInTheDocument();
+
+  // Fast-forward 0.25s → first toast removed
+  act(() => {
+    jest.advanceTimersByTime(250);
+  });
+
+  expect(screen.queryByText("Hello")).toBeNull();
+
+  // Fast-forward remaining 3.25s → second toast removed
+  act(() => {
+    jest.advanceTimersByTime(3250);
+  });
+
+  expect(screen.queryByText("World")).toBeNull();
+
+  // Restore timers and Date.now
+  jest.useRealTimers();
+  global.Date.now = realDateNow;
+});
+
 });

@@ -1,16 +1,34 @@
 import "./Task.css";
 
-function Task({ index, name, description, completed, checkboxActionFunction, deletionCallbackFunction }) {
-
+function Task({
+  index,
+  name,
+  description,
+  completed,
+  checkboxActionFunction,
+  deletionCallbackFunction
+}) {
   return (
-    <div className="Task">
-      <div className="TaskRow">
-        <h2>{index}.</h2> <h2>{name}</h2> <input type="checkbox" defaultChecked={completed} onChange={checkboxActionFunction}></input>
+    <div className="task-card">
+      <div className="task-header">
+        <div className="task-title">
+          <span className="task-index">{index}.</span>
+          <span className="task-name">{name}</span>
+        </div>
+
+        <input
+          type="checkbox"
+          checked={completed}
+          onChange={checkboxActionFunction}
+          className="task-checkbox"
+        />
       </div>
-      <div className="TaskRow">
-        <p>{description}</p>
-      </div>
-      <button className="TaskDeleteButton" onClick={deletionCallbackFunction}>&#10060; Delete Task</button>
+
+      <p className="task-description">{description}</p>
+
+      <button className="task-delete" onClick={deletionCallbackFunction}>
+        Delete
+      </button>
     </div>
   );
 }
