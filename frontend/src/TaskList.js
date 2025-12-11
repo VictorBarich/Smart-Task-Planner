@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import Task from "./Task";
 import BackendConnectionWarning from "./BackendConnectionWarning";
 import TaskAdd from "./TaskAdd";
+import './TaskList.css';
+import { useToast } from "./ToastContext";
 
 const demoTasks = [
   {
@@ -28,6 +30,7 @@ function TaskList() {
   const [connectionWarningShowing, setConnectionWarningShowing] = useState(false);
   const [loadingScreenShowing, setLoadingScreenShowing] = useState(true);
 
+  const { addToast } = useToast();
 
   const fetchTaskList = async () => {
     try {
@@ -64,7 +67,6 @@ function TaskList() {
           'Content-Type': 'application/json',
         }
       });
-      console.log(response)
 
       // Error if we get a successful response back (found a task), we want a 404
       if (response.status !== 404) {
@@ -73,7 +75,7 @@ function TaskList() {
 
     } catch (error) {
       // If task already exists, alert the user
-      alert('Error creating task: Task already exists.');
+      addToast('Error creating task: Task already exists or you may not be connected to the backend.', "error");
       return;
     }
 
@@ -95,11 +97,11 @@ function TaskList() {
       const data = await response.json();
 
       // If successful, alert the user and re-fetch the task list
-      alert(`Success: ${data.message}`);
+      addToast(`Success: ${data.message}`, "success");
       fetchTaskList();
     } catch (error) {
       // If unsuccessful, alert the user
-      alert('Error creating task');
+      addToast('Error creating task', "error");
     }
   };
 
@@ -120,11 +122,11 @@ function TaskList() {
       const data = await response.json();
 
       // If successful, alert the user and re-fetch the task list
-      alert(`Success: ${data.message}`);
+      addToast(`Success: ${data.message}`, "success");
       fetchTaskList();
     } catch (error) {
       // If unsuccessful, alert the user
-      alert("Error deleting task. Note that task deletion is only available if connected to the backend.");
+      addToast('Error deleting task. Note that task deletion is only available if connected to the backend.', "error");
     }
   };
 
@@ -145,66 +147,108 @@ function TaskList() {
       const data = await response.json();
 
       // If successful, alert the user and re-fetch the task list
-      alert(`Success: ${data.message}`);
+      addToast(`Success: ${data.message}`, "success");
       fetchTaskList();
     } catch (error) {
       // If unsuccessful, alert the user
-      alert("Task completion status change not retained. Note that retaining task completion status is only available if connected to the backend.");
+      addToast("Task completion status change not retained. Note that retaining task completion status is only available if connected to the backend.", "error");
     }
   };
 
+  // Attribution: ChatGPT helped to refactor this code to display messages when there are no pending tasks
   return (
-    <div className="TaskList">
-      <h2>Tasks</h2>
-      {/* Show either the loading text or the task list depending on the state */}
-      {
-        loadingScreenShowing ? <h3>Loading...</h3> :
-          <div>
-            {/* Show the backend connection warning if the state is true */}
-            {connectionWarningShowing && <BackendConnectionWarning />}
-            <h3>To-Do:</h3>
-            {tasks.map((task, i) => {
-              const setTaskState = () => {
-                //TODO: integrate with backend completion route when it is created
-                setTasks(prev =>
-                  prev.map((task, ind) =>
-                    i === ind ? { ...task, completed: true } : task
-                  )
-                );
-                PostTaskCompletionStatus(task.name, true);
-              };
-              if (!task.completed)
-                // Use a 1-indexed task list
-                return <Task index={i + 1} name={task.name} description={task.description} completed={task.completed} key={i} getTasks={tasks} checkboxActionFunction={setTaskState} deletionCallbackFunction={()=> DeleteTask(task.name)} />
-              else
-                return null;
-            })}
-            <hr></hr>
-            <h3>Completed:</h3>
-            {tasks.map((task, i) => {
-              const setTaskState = () => {
-                //TODO: integrate with backend completion route when it is created
-                setTasks(prev =>
-                  prev.map((task, ind) =>
-                    i === ind ? { ...task, completed: false } : task
-                  )
-                );
-                PostTaskCompletionStatus(task.name, false);
-              };
-              if (task.completed)
-                // Use a 1-indexed task list
-                return <Task index={i + 1} name={task.name} description={task.description} completed={task.completed} key={i} getTasks={tasks} checkboxActionFunction={setTaskState} deletionCallbackFunction={()=> DeleteTask(task.name)} />
-              else
-                return null;
-            })}
-            <hr></hr>
-            <h3>Create a Task</h3>
-            {/* Use a separate component for adding a task, with a callback function that executes the POST request */}
+  <div className="TaskList">
+
+    <div className="tasklist-container">
+
+      {loadingScreenShowing ? (
+        <h3 className="loading">Loading...</h3>
+      ) : (
+        <>
+          {connectionWarningShowing && <BackendConnectionWarning />}
+
+          <div className="grid">
+            {/* TO-DO LIST */}
+            <div className="card">
+              <h3 className="section-title">To-Do</h3>
+              {tasks.some(t => !t.completed) ? (
+                tasks.map((task, i) => {
+                  if (!task.completed) {
+                    const setTaskState = () => {
+                      setTasks(prev =>
+                        prev.map((t, ind) =>
+                          ind === i ? { ...t, completed: true } : t
+                        )
+                      );
+                      PostTaskCompletionStatus(task.name, true);
+                    };
+
+                    return (
+                      <Task
+                        key={i}
+                        index={i + 1}
+                        name={task.name}
+                        description={task.description}
+                        completed={task.completed}
+                        getTasks={tasks}
+                        checkboxActionFunction={setTaskState}
+                        deletionCallbackFunction={() => DeleteTask(task.name)}
+                      />
+                    );
+                  }
+                  return null;
+                })
+              ) : (
+                <p className="empty">No pending tasks</p>
+              )}
+            </div>
+
+            {/* COMPLETED LIST */}
+            <div className="card">
+              <h3 className="section-title">Completed</h3>
+              {tasks.some(t => t.completed) ? (
+                tasks.map((task, i) => {
+                  if (task.completed) {
+                    const setTaskState = () => {
+                      setTasks(prev =>
+                        prev.map((t, ind) =>
+                          ind === i ? { ...t, completed: false } : t
+                        )
+                      );
+                      PostTaskCompletionStatus(task.name, false);
+                    };
+
+                    return (
+                      <Task
+                        key={i}
+                        index={i + 1}
+                        name={task.name}
+                        description={task.description}
+                        completed={task.completed}
+                        getTasks={tasks}
+                        checkboxActionFunction={setTaskState}
+                        deletionCallbackFunction={() => DeleteTask(task.name)}
+                      />
+                    );
+                  }
+                  return null;
+                })
+              ) : (
+                <p className="empty">No completed tasks</p>
+              )}
+            </div>
+          </div>
+
+          {/* ADD NEW TASK */}
+          <div className="card create-task-card">
+            <h3 className="section-title">Create a Task</h3>
             <TaskAdd callbackFunction={AddTask} />
           </div>
-      }
+        </>
+      )}
     </div>
-  );
+  </div>
+);
 }
 
 export default TaskList;
