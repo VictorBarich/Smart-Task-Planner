@@ -99,20 +99,7 @@ def update_priority(task_name: str, priority: int):
 @router.post("/reorder")
 def reorder_tasks():
     try:
-        updated_tasks = ai_reordering(task_manager)
+        task_manager.tasks = ai_reordering(task_manager).tasks
     except Exception as e:
-            raise HTTPException(status_code=500, detail=f"AI reordering failed: {e}")
+        raise HTTPException(status_code=500, detail=f"AI reordering failed: {e}")
     
-    result = []
-    for task in updated_tasks.tasks:
-        result.append({
-            "name": task.name,
-            "description": task.description,
-            "completed": task.completed,
-            "due_date": task.due_date.isoformat() if task.due_date else None,
-            "category": task.category,
-            "priority": task.priority,
-            "active_since": task.active_since.isoformat() if task.active_since else None,
-        })
-
-    return result
