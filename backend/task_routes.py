@@ -3,6 +3,7 @@ from tasks import Task, Tasks
 from global_task_manager import task_manager
 from pydantic import BaseModel
 from datetime import datetime
+from ai import ai_reordering
 
 class TaskCreate(BaseModel):
     name: str
@@ -94,3 +95,24 @@ def update_priority(task_name: str, priority: int):
                 "priority": task.priority,
             }
     raise HTTPException(status_code=404, detail="Task not found")
+
+@router.post("/reorder")
+def reorder_tasks():
+    try:
+        updated_tasks = ai_reordering(task_manager)
+    except Exception as e:
+            raise HTTPException(status_code=500, detail=f"AI reordering failed: {e}")
+    
+    result = []
+    for task in updated_tasks.tasks:
+        result.append({
+            "name": task.name,
+            "description": task.description,
+            "completed": task.completed,
+            "due_date": task.due_date.isoformat() if task.due_date else None,
+            "category": task.category,
+            "priority": task.priority,
+            "active_since": task.active_since.isoformat() if task.active_since else None,
+        })
+
+    return result
