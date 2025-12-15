@@ -32,6 +32,7 @@
   font-size: 0.95rem;
   resize: none;
   transition: border 0.15s ease, box-shadow 0.15s ease;
+  font-family: inherit;
 }
 
 .taskadd-input:focus,

@@ -4,6 +4,7 @@ import BackendConnectionWarning from "./BackendConnectionWarning";
 import TaskAdd from "./TaskAdd";
 import './TaskList.css';
 import { useToast } from "./ToastContext";
+import { RingLoader } from "react-spinners";
 
 const demoTasks = [
   {
@@ -32,7 +33,12 @@ function TaskList() {
 
   const { addToast } = useToast();
 
+  const [reorderingInProgress, setReorderingInProgress] = useState(false);
+
   const fetchTaskList = async () => {
+    // show the loading text
+    setLoadingScreenShowing(true);
+    
     try {
       // Attempt to fetch the task list from the backend
       const response = await fetch('http://localhost:8000/api/tasks/all');
@@ -153,102 +159,149 @@ function TaskList() {
       // If unsuccessful, alert the user
       addToast("Task completion status change not retained. Note that retaining task completion status is only available if connected to the backend.", "error");
     }
+
+    // hide the loading spinner
+    setReorderingInProgress(false);
+  };
+
+  const PostTaskReorder = async () => {
+    // replace reorder button with the loading spinner
+    setReorderingInProgress(true);
+
+
+    // create a DELETE request to the backend with the task name
+    try {
+      const response = await fetch(`http://localhost:8000/api/tasks/reorder`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // If successful, alert the user and re-fetch the task list
+      addToast(`Smart Reordering Successful!`, "success");
+      fetchTaskList();
+    } catch (error) {
+      // If unsuccessful, alert the user
+      addToast("Unable to smart reorder tasks. Note that smart reordering is only available if connected to the backend.", "error");
+    }
+
+    // replace loading spinner with the reorder button
+    setReorderingInProgress(false);
   };
 
   // Attribution: ChatGPT helped to refactor this code to display messages when there are no pending tasks
   return (
-  <div className="TaskList">
+    <div className="TaskList">
 
-    <div className="tasklist-container">
+      <div className="tasklist-container">
 
-      {loadingScreenShowing ? (
-        <h3 className="loading">Loading...</h3>
-      ) : (
-        <>
-          {connectionWarningShowing && <BackendConnectionWarning />}
+        {loadingScreenShowing ? (
+          <h3 className="loading">Loading...</h3>
+        ) : (
+          <>
+            {connectionWarningShowing && <BackendConnectionWarning />}
 
-          <div className="grid">
-            {/* TO-DO LIST */}
-            <div className="card">
-              <h3 className="section-title">To-Do</h3>
-              {tasks.some(t => !t.completed) ? (
-                tasks.map((task, i) => {
-                  if (!task.completed) {
-                    const setTaskState = () => {
-                      setTasks(prev =>
-                        prev.map((t, ind) =>
-                          ind === i ? { ...t, completed: true } : t
-                        )
+            <div className="grid">
+              {/* TO-DO LIST */}
+              <div className="card">
+                <h3 className="section-title">To-Do</h3>
+                {tasks.some(t => !t.completed) ? (
+                  tasks.map((task, i) => {
+                    if (!task.completed) {
+                      const setTaskState = () => {
+                        setTasks(prev =>
+                          prev.map((t, ind) =>
+                            ind === i ? { ...t, completed: true } : t
+                          )
+                        );
+                        PostTaskCompletionStatus(task.name, true);
+                      };
+
+                      return (
+                        <Task
+                          key={i}
+                          index={i + 1}
+                          name={task.name}
+                          description={task.description}
+                          completed={task.completed}
+                          getTasks={tasks}
+                          checkboxActionFunction={setTaskState}
+                          deletionCallbackFunction={() => DeleteTask(task.name)}
+                        />
                       );
-                      PostTaskCompletionStatus(task.name, true);
-                    };
+                    }
+                    return null;
+                  })
+                ) : (
+                  <p className="empty">No pending tasks</p>
+                )}
+              </div>
 
-                    return (
-                      <Task
-                        key={i}
-                        index={i + 1}
-                        name={task.name}
-                        description={task.description}
-                        completed={task.completed}
-                        getTasks={tasks}
-                        checkboxActionFunction={setTaskState}
-                        deletionCallbackFunction={() => DeleteTask(task.name)}
-                      />
-                    );
-                  }
-                  return null;
-                })
-              ) : (
-                <p className="empty">No pending tasks</p>
-              )}
+              {/* COMPLETED LIST */}
+              <div className="card">
+                <h3 className="section-title">Completed</h3>
+                {tasks.some(t => t.completed) ? (
+                  tasks.map((task, i) => {
+                    if (task.completed) {
+                      const setTaskState = () => {
+                        setTasks(prev =>
+                          prev.map((t, ind) =>
+                            ind === i ? { ...t, completed: false } : t
+                          )
+                        );
+                        PostTaskCompletionStatus(task.name, false);
+                      };
+
+                      return (
+                        <Task
+                          key={i}
+                          index={i + 1}
+                          name={task.name}
+                          description={task.description}
+                          completed={task.completed}
+                          getTasks={tasks}
+                          checkboxActionFunction={setTaskState}
+                          deletionCallbackFunction={() => DeleteTask(task.name)}
+                        />
+                      );
+                    }
+                    return null;
+                  })
+                ) : (
+                  <p className="empty">No completed tasks</p>
+                )}
+              </div>
             </div>
 
-            {/* COMPLETED LIST */}
-            <div className="card">
-              <h3 className="section-title">Completed</h3>
-              {tasks.some(t => t.completed) ? (
-                tasks.map((task, i) => {
-                  if (task.completed) {
-                    const setTaskState = () => {
-                      setTasks(prev =>
-                        prev.map((t, ind) =>
-                          ind === i ? { ...t, completed: false } : t
-                        )
-                      );
-                      PostTaskCompletionStatus(task.name, false);
-                    };
+            {reorderingInProgress ?
+              <RingLoader
+                color={"#ffffff"}
+                loading={true}
+                cssOverride={{
+                  display: "block",
+                  margin: "0 auto",
+                }}
+                size={50}
+                aria-label="Loading Spinner"
+                data-testid="loader"
+              /> : <button onClick={() => PostTaskReorder()} className="glow-on-hover">Smart Reorder</button>
+            }
 
-                    return (
-                      <Task
-                        key={i}
-                        index={i + 1}
-                        name={task.name}
-                        description={task.description}
-                        completed={task.completed}
-                        getTasks={tasks}
-                        checkboxActionFunction={setTaskState}
-                        deletionCallbackFunction={() => DeleteTask(task.name)}
-                      />
-                    );
-                  }
-                  return null;
-                })
-              ) : (
-                <p className="empty">No completed tasks</p>
-              )}
+            {/* ADD NEW TASK */}
+            <div className="card create-task-card">
+              <h3 className="section-title">Create a Task</h3>
+              <TaskAdd callbackFunction={AddTask} />
             </div>
-          </div>
-
-          {/* ADD NEW TASK */}
-          <div className="card create-task-card">
-            <h3 className="section-title">Create a Task</h3>
-            <TaskAdd callbackFunction={AddTask} />
-          </div>
-        </>
-      )}
+          </>
+        )}
+      </div>
     </div>
-  </div>
-);
+  );
 }
 
 export default TaskList;
