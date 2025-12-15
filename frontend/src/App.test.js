@@ -489,3 +489,73 @@ it("adds and removes toasts correctly", async () => {
 });
 
 });
+
+test("test reordering tasks successfully", async () => {
+  // Patterned off of above test cases
+  const mockFetch = jest.spyOn(global, 'fetch')
+    .mockImplementation((url, options) => {
+      if (url == "http://localhost:8000/api/tasks/reorder") {
+        // mock successful response for task reorder
+        return Promise.resolve({
+          ok: true
+        });
+      }
+    });
+
+  // Mock the toast function so we can detect when it is called
+  const mockAddToast = jest.fn();
+
+  const user = userEvent.setup();
+
+  render(<ToastContext.Provider value={{ addToast: mockAddToast }}><TaskList /></ToastContext.Provider>);
+
+  // Except a demo task to be visible
+  const demo_task = await screen.findByText(/Wash the Dishes/i);
+  expect(demo_task).toBeInTheDocument();
+
+  const reorderButton = screen.getByRole('button', { name: /Smart Reorder/i });
+  fireEvent.click(reorderButton);
+
+  // Wait for alert to be called
+  await waitFor(() => {
+    expect(mockAddToast).toHaveBeenCalledWith("Smart Reordering Successful!", "success");
+  });
+
+  // Restore fetch and alert mocks
+  jest.restoreAllMocks();
+});
+
+test("test reordering tasks unsuccessfully", async () => {
+  // Patterned off of above test cases
+  const mockFetch = jest.spyOn(global, 'fetch')
+    .mockImplementation((url, options) => {
+      if (url == "http://localhost:8000/api/tasks/reorder") {
+        // mock successful response for task reorder
+        return Promise.resolve({
+          ok: false
+        });
+      }
+    });
+
+  // Mock the toast function so we can detect when it is called
+  const mockAddToast = jest.fn();
+
+  const user = userEvent.setup();
+
+  render(<ToastContext.Provider value={{ addToast: mockAddToast }}><TaskList /></ToastContext.Provider>);
+
+  // Except a demo task to be visible
+  const demo_task = await screen.findByText(/Wash the Dishes/i);
+  expect(demo_task).toBeInTheDocument();
+
+  const reorderButton = screen.getByRole('button', { name: /Smart Reorder/i });
+  fireEvent.click(reorderButton);
+
+  // Wait for alert to be called
+  await waitFor(() => {
+    expect(mockAddToast).toHaveBeenCalledWith("Unable to smart reorder tasks. Note that smart reordering is only available if connected to the backend.", "error");
+  });
+
+  // Restore fetch and alert mocks
+  jest.restoreAllMocks();
+});
