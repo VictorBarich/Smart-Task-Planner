@@ -64,7 +64,7 @@ function TaskList() {
     fetchTaskList();
   }, []);
 
-  const AddTask = async (taskName, taskDescription) => {
+  const AddTask = async (taskName, taskDescription, taskCategory) => {
     // create a GET request to the backend to see if a task with the same name already exists
     try {
       const response = await fetch(`http://localhost:8000/api/tasks/get/${taskName}`, {
@@ -93,7 +93,7 @@ function TaskList() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ name: taskName, description: taskDescription }),
+        body: JSON.stringify({ name: taskName, description: taskDescription, category: taskCategory }),
       });
 
       if (!response.ok) {
@@ -228,6 +228,7 @@ function TaskList() {
                           index={i + 1}
                           name={task.name}
                           description={task.description}
+                          category={task.category}
                           completed={task.completed}
                           getTasks={tasks}
                           checkboxActionFunction={setTaskState}
@@ -263,6 +264,7 @@ function TaskList() {
                           index={i + 1}
                           name={task.name}
                           description={task.description}
+                          category={task.category}
                           completed={task.completed}
                           getTasks={tasks}
                           checkboxActionFunction={setTaskState}

@@ -6,11 +6,12 @@ import { useToast } from "./ToastContext";
 function TaskAdd({ callbackFunction }) {
   const [taskName, setTaskName] = useState("");
   const [taskDescription, setTaskDescription] = useState("");
+  const [taskCategory, setTaskCategory] = useState("General");
 
   const { addToast } = useToast();
 
   const submit = () => {
-    callbackFunction(taskName, taskDescription);
+    callbackFunction(taskName, taskDescription, taskCategory);
     setTaskName("");
     setTaskDescription("");
   };
@@ -34,6 +35,16 @@ function TaskAdd({ callbackFunction }) {
           placeholder="Use a ballpoint pen..."
           value={taskDescription}
           onChange={(event) => setTaskDescription(event.target.value)}
+        />
+      </div>
+
+      <div className="taskadd-field">
+        <label>Task Category</label>
+        <input
+          className="taskadd-input"
+          placeholder="General"
+          value={taskCategory}
+          onChange={(event) => setTaskCategory(event.target.value)}
         />
       </div>
 
