@@ -8,13 +8,14 @@ from ai import ai_reordering
 class TaskCreate(BaseModel):
     name: str
     description: str
+    category: str
 
 router = APIRouter(prefix="/api/tasks", tags=["tasks"])
 
 # Add a task (use json)
 @router.post("/add")
 def create_task(task: TaskCreate):
-    new_task = Task(task.name, task.description)
+    new_task = Task(name=task.name, description=task.description, category=task.category)
     task_manager.add_task(new_task)
     return {"message": f"Task '{task.name}' added successfully"}
 
@@ -22,7 +23,7 @@ def create_task(task: TaskCreate):
 @router.get("/all")
 def get_all_tasks():
     return [
-        {"name": task.name, "description": task.description, "completed": task.completed, "due_date": task.due_date}
+        {"name": task.name, "description": task.description, "completed": task.completed, "due_date": task.due_date, "category": task.category}
         for task in task_manager.tasks
     ]
 
@@ -35,7 +36,8 @@ def get_task(task_name: str):
                 "name": task.name, 
                 "description": task.description,
                 "completed": task.completed,
-                "due_date": task.due_date
+                "due_date": task.due_date,
+                "category": task.category
             }
     raise HTTPException(status_code=404, detail="Task not found")
 

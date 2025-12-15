@@ -14,11 +14,15 @@ test('main page renders app logo', () => {
 });
 
 test('Task renders passed in information', () => {
-  render(<Task index={999} name={"TestABC"} completed={false} checkboxActionFunction={() => { }} />);
-  const taskIndex = screen.getByText(/999./i);
+  render(<Task index={999} name={"TestABC"} description={"TaskDescription"} category={"TaskCategory"} completed={false} checkboxActionFunction={() => { }} />);
+  const taskIndex = screen.getByText(/#999/i);
   expect(taskIndex).toBeInTheDocument();
   const taskName = screen.getByText(/TestABC/i);
   expect(taskName).toBeInTheDocument();
+  const taskDescription = screen.getByText(/TaskDescription/i);
+  expect(taskDescription).toBeInTheDocument();
+  const taskCategory = screen.getByText(/TaskCategory/i);
+  expect(taskCategory).toBeInTheDocument();
 });
 
 test('Task checkbox executes action function when checked', async () => {
@@ -138,10 +142,12 @@ test("test adding a task with successful backend POST and successful duplication
   // Attribution: ChatGPT aided in writing these lines which find and modify the textboxes and click the button
   const nameInput = screen.getByPlaceholderText('Write a letter');
   const descriptionInput = screen.getByPlaceholderText('Use a ballpoint pen...');
+  const categoryInput = screen.getByPlaceholderText('General');
   const addButton = screen.getByRole('button', { name: /add/i });
 
   fireEvent.change(nameInput, { target: { value: 'Do homework' } });
   fireEvent.change(descriptionInput, { target: { value: 'Math exercises' } });
+  fireEvent.change(categoryInput, { target: { value: 'TestCategory' } });
   fireEvent.click(addButton);
 
   // Wait for alert to be called
